@@ -1,43 +1,47 @@
 #!/usr/bin/python3
 """
-This module contains the function that displays the
-stats from the standard input
+Module that parses a log and prints stats to stdout
 """
-import re
-import sys
-status_codes = {200: 0, 301: 0, 400: 0, 401: 0,
-                403: 0, 404: 0, 405: 0, 500: 0}
-print_counter = 0
-size_summation = 0
+from sys import stdin
+
+status_codes = {
+    "200": 0,
+    "301": 0,
+    "400": 0,
+    "401": 0,
+    "403": 0,
+    "404": 0,
+    "405": 0,
+    "500": 0
+}
+
+size = 0
 
 
-def print_logs():
-    """
-    Prints status codes to the logs
-    """
-    print("File size: {}".format(size_summation))
-    for k, v in sorted(status_codes.items()):
-        if v != 0:
-            print("{}: {}".format(k, v))
+def print_stats():
+    """Prints the accumulated logs"""
+    print("File size: {}".format(size))
+    for status in sorted(status_codes.keys()):
+        if status_codes[status]:
+            print("{}: {}".format(status, status_codes[status]))
 
 
 if __name__ == "__main__":
+    count = 0
     try:
-        for line in sys.stdin:
-            std_line = line.replace("\n", "")
-            log_list = re.split('- | "|" | " " ', str(std_line))
+        for line in stdin:
             try:
-                codes = log_list[-1].split(" ")
-                if int(codes[0]) not in status_codes.keys():
-                    continue
-                status_codes[int(codes[0])] += 1
-                print_counter += 1
-                size_summation += int(codes[1])
-                if print_counter % 10 == 0:
-                    print_logs()
-            except():
+                items = line.split()
+                size += int(items[-1])
+                if items[-2] in status_codes:
+                    status_codes[items[-2]] += 1
+            except:
                 pass
-        print_logs()
+            if count == 9:
+                print_stats()
+                count = -1
+            count += 1
     except KeyboardInterrupt:
-        print_logs()
+        print_stats()
         raise
+    print_stats()
